@@ -75,10 +75,6 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-#define GST_TYPE_UNIX_FD_SINK gst_unix_fd_sink_get_type()
-G_DECLARE_FINAL_TYPE (GstUnixFdSink, gst_unix_fd_sink, GST, UNIX_FD_SINK,
-    GstBaseSink);
-
 typedef struct
 {
   GHashTable *buffers;
@@ -122,13 +118,6 @@ struct _GstUnixFdSink
 };
 
 G_DEFINE_TYPE (GstUnixFdSink, gst_unix_fd_sink, GST_TYPE_BASE_SINK);
-#ifdef HAVE_IPC_TARGET_NV
-GST_ELEMENT_REGISTER_DEFINE (unixfdsink, "nvunixfdsink", GST_RANK_NONE,
-    GST_TYPE_UNIX_FD_SINK);
-#else
-GST_ELEMENT_REGISTER_DEFINE (unixfdsink, "unixfdsink", GST_RANK_NONE,
-    GST_TYPE_UNIX_FD_SINK);
-#endif
 
 #define DEFAULT_SOCKET_TYPE G_UNIX_SOCKET_ADDRESS_PATH
 
@@ -804,7 +793,7 @@ client_buffer_pool_configuration_from_buffer (GstUnixFdSink * self, Client * cli
     {
       cinfo.range = GST_VIDEO_COLOR_RANGE_16_235;
       cinfo.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
-      cinfo.transfer = GST_VIDEO_TRANSFER_BT601;
+      cinfo.transfer = GST_VIDEO_TRANSFER_BT709;
       cinfo.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
     }
     break;
@@ -812,7 +801,7 @@ client_buffer_pool_configuration_from_buffer (GstUnixFdSink * self, Client * cli
     {
       cinfo.range = GST_VIDEO_COLOR_RANGE_0_255;
       cinfo.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
-      cinfo.transfer = GST_VIDEO_TRANSFER_BT601;
+      cinfo.transfer = GST_VIDEO_TRANSFER_BT709;
       cinfo.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
     }
     break;
@@ -844,7 +833,7 @@ client_buffer_pool_configuration_from_buffer (GstUnixFdSink * self, Client * cli
     {
       cinfo.range = GST_VIDEO_COLOR_RANGE_16_235;
       cinfo.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
-      cinfo.transfer = GST_VIDEO_TRANSFER_BT601;
+      cinfo.transfer = GST_VIDEO_TRANSFER_BT709;
       cinfo.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
     }
     break;
@@ -1199,7 +1188,8 @@ out:
   return ret;
 
 #ifdef HAVE_IPC_TARGET_NV
-buffer_copy:
+buffer_copy: {
+
 
   GHashTableIter iter;
   GSocket *socket;
@@ -1260,6 +1250,8 @@ buffer_copy:
   GST_OBJECT_UNLOCK (self);
 
   return GST_FLOW_OK;
+}
+
 #endif
 }
 

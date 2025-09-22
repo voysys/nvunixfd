@@ -63,10 +63,6 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-#define GST_TYPE_UNIX_FD_SRC gst_unix_fd_src_get_type()
-G_DECLARE_FINAL_TYPE (GstUnixFdSrc, gst_unix_fd_src, GST, UNIX_FD_SRC,
-    GstPushSrc);
-
 #ifdef HAVE_IPC_TARGET_NV
 typedef enum
 {
@@ -111,13 +107,6 @@ struct _GstUnixFdSrc
 
 
 G_DEFINE_TYPE (GstUnixFdSrc, gst_unix_fd_src, GST_TYPE_PUSH_SRC);
-#ifdef HAVE_IPC_TARGET_NV
-GST_ELEMENT_REGISTER_DEFINE (unixfdsrc, "nvunixfdsrc", GST_RANK_NONE,
-    GST_TYPE_UNIX_FD_SRC);
-#else
-GST_ELEMENT_REGISTER_DEFINE (unixfdsrc, "unixfdsrc", GST_RANK_NONE,
-    GST_TYPE_UNIX_FD_SRC);
-#endif
 
 #define DEFAULT_SOCKET_TYPE G_UNIX_SOCKET_ADDRESS_PATH
 

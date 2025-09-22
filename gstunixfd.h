@@ -5,26 +5,13 @@
  *
  * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LGPL-2.1-only
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
  */
 
 #pragma once
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
+#include <gst/base/gstpushsrc.h>
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
 
@@ -39,6 +26,16 @@ G_BEGIN_DECLS
 #define GstUnixFdSinkClass GstNvUnixFdSinkClass
 #define GstUnixFdSrc GstNvUnixFdSrc
 #define GstUnixFdSrcClass GstNvUnixFdSrcClass
+
+/* --- unixfdsink --- */
+#define GST_TYPE_UNIX_FD_SINK (gst_unix_fd_sink_get_type())
+G_DECLARE_FINAL_TYPE (GstUnixFdSink, gst_unix_fd_sink,
+                      GST, UNIX_FD_SINK, GstBaseSink)
+
+/* --- unixfdsrc --- */
+#define GST_TYPE_UNIX_FD_SRC (gst_unix_fd_src_get_type())
+G_DECLARE_FINAL_TYPE (GstUnixFdSrc, gst_unix_fd_src,
+                      GST, UNIX_FD_SRC, GstPushSrc)
 #endif
 
 typedef enum
@@ -97,7 +94,5 @@ GSocket *gst_unix_fd_socket_new(const gchar *socket_path,
     GUnixSocketAddressType socket_type, GSocketAddress **address,
     GError **error);
 
-GST_ELEMENT_REGISTER_DECLARE (unixfdsrc);
-GST_ELEMENT_REGISTER_DECLARE (unixfdsink);
 
 G_END_DECLS

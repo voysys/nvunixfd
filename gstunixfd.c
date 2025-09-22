@@ -213,18 +213,6 @@ gst_unix_fd_socket_new (const gchar * socket_path,
   return socket;
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (unixfdsrc, plugin);
-  ret |= GST_ELEMENT_REGISTER (unixfdsink, plugin);
-
-  return ret;
-}
-
-#ifdef HAVE_IPC_TARGET_NV
 /* Name of package */
 #define PACKAGE "gstreamer-nvunixfd-plugin"
 /* Define to the full name of this package. */
@@ -240,15 +228,51 @@ plugin_init (GstPlugin * plugin)
 /* Version number of package */
 #define VERSION "0.0.1"
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    nvunixfd,
-    "Unix file descriptor sink and source",
-    plugin_init, VERSION, "LGPL", PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+#ifdef HAVE_IPC_TARGET_NV
+  if (!gst_element_register (plugin,
+                             "nvunixfdsrc",
+                             GST_RANK_NONE,
+                             GST_TYPE_UNIX_FD_SRC))
+    return FALSE;
+
+  if (!gst_element_register (plugin,
+                             "nvunixfdsink",
+                             GST_RANK_NONE,
+                             GST_TYPE_UNIX_FD_SINK))
+    return FALSE;
 #else
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    unixfd,
-    "Unix file descriptor sink and source",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+  if (!gst_element_register (plugin,
+                             "unixfdsrc",
+                             GST_RANK_NONE,
+                             GST_TYPE_UNIX_FD_SRC))
+    return FALSE;
+
+  if (!gst_element_register (plugin,
+                             "unixfdsink",
+                             GST_RANK_NONE,
+                             GST_TYPE_UNIX_FD_SINK))
+    return FALSE;
 #endif
+
+  return TRUE;
+}
+
+GST_PLUGIN_DEFINE (
+    GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+#ifdef HAVE_IPC_TARGET_NV
+    nvunixfd,                       /* plugin name */
+    "Unix file descriptor NV src/sink", /* description */
+#else
+    unixfd,                         /* plugin name */
+    "Unix file descriptor src/sink", /* description */
+#endif
+    plugin_init,                    /* init function */
+    "1.0",                          /* version */
+    "LGPL",                         /* license */
+    "GStreamer",                    /* package name */
+    "https://gstreamer.freedesktop.org/" /* origin */
+)
