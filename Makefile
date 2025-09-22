@@ -18,11 +18,11 @@ CC := gcc
 GST_INSTALL_DIR?=/usr/lib/aarch64-linux-gnu/gstreamer-1.0/
 LIB_INSTALL_DIR?=/usr/lib/aarch64-linux-gnu/tegra/
 CFLAGS:=
-LIBS:= -lnvbufsurface -lnvbufsurftransform -lpthread
+LIBS:= -lnvbufsurface -lnvbufsurftransform -lpthread -ldl
 
 SRCS := $(wildcard *.c)
 
-INCLUDES += -I./ -I../
+INCLUDES += -I./ -I/usr/src/jetson_multimedia_api/include/
 
 PKGS := gstreamer-1.0 \
 	gstreamer-base-1.0 \
@@ -34,6 +34,8 @@ PKGS := gstreamer-1.0 \
 
 OBJS := $(SRCS:.c=.o)
 
+CFLAGS += -O3 -DNDEBUG
+
 CFLAGS += -fPIC \
 	-DEXPLICITLY_ADDED=1 \
 	-DGETTEXT_PACKAGE=1 \
@@ -42,6 +44,8 @@ CFLAGS += -fPIC \
 CFLAGS += `pkg-config --cflags $(PKGS)`
 
 LDFLAGS = -Wl,--no-undefined -L$(LIB_INSTALL_DIR) -Wl,-rpath,$(LIB_INSTALL_DIR)
+
+LDFLAGS += -s
 
 LIBS += `pkg-config --libs $(PKGS)`
 
