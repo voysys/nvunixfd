@@ -1,0 +1,91 @@
+name: Email validation by Security Team
+
+permissions:
+  contents: read
+  pull-requests: read
+  
+on:
+  pull_request:
+  push:
+
+jobs:
+  validate-emails:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Required to access all commits
+
+      - name: Authenticate GitHub CLI
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      - name: Validate emails
+        run: |
+          DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
+          CURRENT_BRANCH="${GITHUB_REF_NAME}"
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "🔎 Validating commits in the pull request..."
+
+            PR_NUMBER=${{ github.event.pull_request.number }}
+            PR_COMMITS=$(gh pr view "$PR_NUMBER" --json commits --jq '.commits[].oid')
+
+            echo "Default branch = $DEFAULT_BRANCH"
+            echo "Current branch = $CURRENT_BRANCH"
+
+            for sha in $PR_COMMITS; do
+              author_email=$(git show -s --format='%ae' "$sha")
+              committer_email=$(git show -s --format='%ce' "$sha")
+
+              echo "📝 Commit = $sha"
+              echo "📧 Author Email  = $author_email"
+              echo "📧 Commiter Email  = $committer_email"
+
+              if [[ ! $author_email =~ @serverobotics\.com$ && ! $author_email =~ @github\.com$ ]]; then
+                echo "❌ Commit $sha on $CURRENT_BRANCH has non-compliant Author email= $author_email"
+                exit 1
+              fi
+
+              if [[ ! $committer_email =~ @serverobotics\.com$ && ! $committer_email =~ @github\.com$ ]]; then
+                echo "❌ Commit $sha on $CURRENT_BRANCH has non-compliant Committer email= $committer_email"
+                exit 1
+              fi          
+            done
+
+            echo "✅ All commits in PR have compliant Author emails and Committer emails."
+
+
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "🔎 Validating latest commit on push..."
+
+            sha=$(git rev-parse HEAD)
+            author_email=$(git show -s --format='%ae' "$sha")
+            committer_email=$(git show -s --format='%ce' "$sha")
+
+            echo "Default branch = $DEFAULT_BRANCH"
+            echo "Current branch = $CURRENT_BRANCH"
+            echo "📝 Commit = $sha"
+            echo "📧 Author Email  = $author_email"
+            echo "📧 Commiter Email  = $committer_email"
+
+            if [[ ! $author_email =~ @serverobotics\.com$ ]]; then
+              echo "❌ Latest commit $sha on $CURRENT_BRANCH has non-compliant Author email= $author_email"
+              exit 1
+            else
+              echo "✅ Author Email is compliant for commit."
+            fi
+
+            if [[ ! $committer_email =~ @serverobotics\.com$ && ! $committer_email =~ @github\.com$ ]]; then
+              echo "❌ Latest commit $sha on $CURRENT_BRANCH has non-compliant Committer email= $committer_email"
+              exit 1
+            else
+              echo "✅ Committer Email is compliant for commit."
+            fi
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
